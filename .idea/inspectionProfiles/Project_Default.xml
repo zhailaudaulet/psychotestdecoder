@@ -1,0 +1,44 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="asttokens" />
+          <option value="colorama" />
+          <option value="comm" />
+          <option value="debugpy" />
+          <option value="decorator" />
+          <option value="et_xmlfile" />
+          <option value="executing" />
+          <option value="fpdf" />
+          <option value="ghostscript" />
+          <option value="ipykernel" />
+          <option value="ipython" />
+          <option value="ipython_pygments_lexers" />
+          <option value="jedi" />
+          <option value="jupyter_client" />
+          <option value="jupyter_core" />
+          <option value="matplotlib-inline" />
+          <option value="nest-asyncio" />
+          <option value="openpyxl" />
+          <option value="packaging" />
+          <option value="parso" />
+          <option value="platformdirs" />
+          <option value="prompt_toolkit" />
+          <option value="psutil" />
+          <option value="pure_eval" />
+          <option value="Pygments" />
+          <option value="pytz" />
+          <option value="pywin32" />
+          <option value="pyzmq" />
+          <option value="stack-data" />
+          <option value="tornado" />
+          <option value="traitlets" />
+          <option value="tzdata" />
+          <option value="wcwidth" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

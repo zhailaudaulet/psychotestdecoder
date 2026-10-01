@@ -1,0 +1,116 @@
+* { box-sizing: border-box; }
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #191919;
+  background: #f6f6f4;
+}
+body { margin: 0; min-width: 320px; }
+button, input { font: inherit; }
+
+.page { min-height: 100vh; padding: 48px 20px; }
+.container { max-width: 1060px; margin: 0 auto; }
+
+.header { display: flex; align-items: center; gap: 14px; margin-bottom: 34px; }
+.brand-mark {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: grid; place-items: center;
+  background: #171717; color: white;
+}
+.header h1 { margin: 0; font-size: 25px; letter-spacing: -0.6px; }
+.header p { margin: 4px 0 0; color: #777; font-size: 14px; }
+
+.dropzone {
+  border: 1.5px dashed #c8c8c2;
+  background: white;
+  min-height: 390px;
+  border-radius: 22px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: .18s ease;
+}
+.dropzone:hover, .dropzone.dragging {
+  border-color: #111;
+  background: #fcfcfa;
+  transform: translateY(-1px);
+}
+.upload-icon {
+  width: 62px; height: 62px; border-radius: 18px;
+  background: #f0f0ed; display: grid; place-items: center; margin-bottom: 18px;
+}
+.dropzone h2 { margin: 0 0 8px; font-size: 22px; }
+.dropzone p { margin: 0; color: #777; }
+.hint { margin-top: 18px; font-size: 12px; color: #999; }
+
+.file-card, .preview-card {
+  background: white; border: 1px solid #e5e5e0; border-radius: 18px;
+}
+.file-card {
+  padding: 15px 17px; display: flex; align-items: center; justify-content: space-between;
+}
+.file-info { display: flex; align-items: center; gap: 12px; }
+.file-icon {
+  width: 42px; height: 42px; border-radius: 11px; background: #f0f0ed;
+  display: grid; place-items: center;
+}
+.file-info strong { display: block; font-size: 14px; }
+.file-info span { display: block; color: #999; font-size: 12px; margin-top: 3px; }
+.icon-btn { border: 0; background: transparent; color: #888; cursor: pointer; padding: 8px; border-radius: 9px; }
+.icon-btn:hover { background: #f1f1ef; color: #111; }
+
+.processing {
+  margin-top: 14px; padding: 20px; text-align: center;
+  background: white; border: 1px solid #e5e5e0; border-radius: 16px; color: #666;
+}
+.stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0;
+}
+.stats > div {
+  background: white; border: 1px solid #e5e5e0; border-radius: 16px;
+  padding: 18px 20px;
+}
+.stats b { display: block; font-size: 24px; letter-spacing: -0.5px; }
+.stats span { color: #858585; font-size: 12px; }
+.stats .bad b { color: #b42318; }
+
+.warning {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 15px 17px; border-radius: 14px; background: #fff8e8; color: #785500;
+  margin-bottom: 14px;
+}
+.warning p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
+.warning svg { flex: 0 0 auto; }
+
+.preview-card { overflow: hidden; }
+.section-title { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+.section-title h2 { margin: 0; font-size: 17px; }
+.section-title p { margin: 4px 0 0; color: #888; font-size: 12px; }
+.success-icon { color: #25844c; }
+.table-wrap { overflow-x: auto; border-top: 1px solid #ededeb; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 13px 16px; border-bottom: 1px solid #f0f0ed; white-space: nowrap; }
+th { color: #888; font-weight: 500; font-size: 12px; background: #fafaf8; }
+td b { margin-right: 8px; }
+.level {
+  display: inline-block; color: #777; font-size: 11px;
+  padding: 3px 7px; border-radius: 20px; background: #f1f1ef;
+}
+
+.download-btn {
+  width: 100%; margin-top: 16px; height: 52px; border: 0; border-radius: 14px;
+  background: #171717; color: white; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+}
+.download-btn:hover { background: #303030; }
+.download-btn:disabled { opacity: .45; cursor: not-allowed; }
+.secondary-btn {
+  width: 100%; margin-top: 10px; height: 48px; border: 1px solid #ddd;
+  border-radius: 14px; background: white; color: #333; cursor: pointer;
+}
+.secondary-btn:hover { background: #f5f5f3; }
+
+footer { text-align: center; color: #999; font-size: 12px; margin-top: 26px; }
+
+@media (max-width: 650px) {
+  .page { padding: 28px 14px; }
+  .stats { grid-template-columns: 1fr; }
+  .dropzone { min-height: 320px; text-align: center; padding: 20px; }
+}
