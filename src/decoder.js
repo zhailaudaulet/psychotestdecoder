@@ -71,6 +71,7 @@ export const TEST_DEFINITIONS = {
     title: "Профессиональные типы Холланда",
     description: "Результаты по шести типам профессиональных интересов RIASEC",
     version: "O",
+    supportedVersions: ["O", "B"],
     payloadLength: 6,
     metrics: RIASEC_METRICS,
     exampleUrl: "https://psytests.org/result?v=holO1WhH3E",
@@ -216,7 +217,7 @@ function decodeTableTest(payload, reference, table, radix, count) {
   return toDigits(value, radix, count);
 }
 
-function decodeRiasec(payload) {
+function decodeRiasecO(payload) {
   const digits = toVariableDigits(decodeBase64(payload), 33);
 
   if (digits.length < RIASEC_METRICS.length + 1) {
@@ -224,6 +225,27 @@ function decodeRiasec(payload) {
   }
 
   return digits.slice(1, RIASEC_METRICS.length + 1);
+}
+
+function decodeRiasecB(payload) {
+  const digits = toVariableDigits(decodeBase64(payload), 10);
+  const scoreDigitCount = RIASEC_METRICS.length * 2;
+
+  if (digits.length < scoreDigitCount + 1) {
+    throw new Error("Код слишком короткий для теста Холланда");
+  }
+
+  return Array.from({ length: RIASEC_METRICS.length }, (_, index) => {
+    const offset = index * 2 + 1;
+    return digits[offset] * 10 + digits[offset + 1];
+  });
+}
+
+function decodeRiasec(payload, version) {
+  if (version === "O") return decodeRiasecO(payload);
+  if (version === "B") return decodeRiasecB(payload);
+
+  throw new Error(`Неподдерживаемая версия «${version}»`);
 }
 
 function decodeCaas(payload) {
@@ -275,7 +297,9 @@ export function decodeTestUrl(url, selectedTestId) {
     throw new Error(`Ссылка относится к тесту «${linkedTest.label}»`);
   }
 
-  if (version !== selectedTest.version) {
+  const supportedVersions = selectedTest.supportedVersions ?? [selectedTest.version];
+
+  if (!supportedVersions.includes(version)) {
     throw new Error(`Неподдерживаемая версия «${version}»`);
   }
 
@@ -286,7 +310,7 @@ export function decodeTestUrl(url, selectedTestId) {
     throw new Error("Неожиданная длина кода");
   }
 
-  const scores = decoders[selectedTestId](payload);
+  const scores = decoders[selectedTestId](payload, version);
 
   return Object.fromEntries(
     selectedTest.metrics.map((metric, index) => [metric, scores[index]]),
