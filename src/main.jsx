@@ -10,6 +10,8 @@ import {
   X,
   BrainCircuit,
   Compass,
+  BriefcaseBusiness,
+  Route,
 } from "lucide-react";
 import {
   TEST_DEFINITIONS,
@@ -519,6 +521,16 @@ function App() {
 
   return (
     <div className="page">
+      <div className="ambient-background" aria-hidden="true">
+        <div className="ambient-glow ambient-glow-top" />
+        <div className="ambient-glow ambient-glow-bottom" />
+
+        <Compass className="ambient-symbol ambient-compass" strokeWidth={1} />
+        <BrainCircuit className="ambient-symbol ambient-brain" strokeWidth={1} />
+        <BriefcaseBusiness className="ambient-symbol ambient-career" strokeWidth={1} />
+        <Route className="ambient-symbol ambient-route" strokeWidth={1} />
+      </div>
+
       <div className="container">
 
         {/* HEADER */}

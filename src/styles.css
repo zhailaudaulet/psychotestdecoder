@@ -13,17 +13,18 @@
     sans-serif;
 
   color: #191919;
-  background: #f6f6f4;
+  background: #f4f1e9;
 
-  --accent: #2856d7;
-  --accent-dark: #1f45af;
-  --accent-soft: #eef3ff;
-  --accent-line: #aebff3;
+  --accent: #8b642d;
+  --accent-dark: #6b4b1f;
+  --accent-soft: #f3ebdc;
+  --accent-line: #d5c4a5;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  background: #f4f1e9;
 }
 
 button,
@@ -38,11 +39,87 @@ input {
 .page {
   min-height: 100vh;
   padding: 42px 20px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .container {
   max-width: 1060px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.ambient-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-glow {
+  position: absolute;
+  border-radius: 50%;
+  background: #d9c39b;
+  filter: blur(90px);
+  opacity: 0.24;
+}
+
+.ambient-glow-top {
+  width: 390px;
+  height: 390px;
+  top: -170px;
+  right: -80px;
+}
+
+.ambient-glow-bottom {
+  width: 470px;
+  height: 470px;
+  left: -230px;
+  bottom: -230px;
+  background: #c8c1ad;
+  opacity: 0.2;
+}
+
+.ambient-symbol {
+  position: absolute;
+  color: #725b35;
+  opacity: 0.1;
+  filter: blur(1.6px);
+}
+
+.ambient-compass {
+  width: 190px;
+  height: 190px;
+  top: 14%;
+  left: -48px;
+  transform: rotate(-12deg);
+}
+
+.ambient-brain {
+  width: 220px;
+  height: 220px;
+  top: 42%;
+  right: -65px;
+  transform: rotate(8deg);
+}
+
+.ambient-career {
+  width: 165px;
+  height: 165px;
+  left: 3%;
+  bottom: 5%;
+  transform: rotate(7deg);
+}
+
+.ambient-route {
+  width: 180px;
+  height: 180px;
+  right: 4%;
+  bottom: 4%;
+  transform: rotate(-10deg);
 }
 
 /* =========================
@@ -151,7 +228,7 @@ input {
   color: var(--accent);
   background: white;
   border: 1px solid var(--accent-line);
-  box-shadow: 0 8px 24px rgba(40, 86, 215, 0.12);
+  box-shadow: 0 8px 24px rgba(107, 75, 31, 0.13);
 }
 
 .orientation-ring-primary {
@@ -332,7 +409,7 @@ label:has(input:focus-visible) {
   border-color: var(--accent);
   background: var(--accent);
   color: white;
-  box-shadow: 0 7px 18px rgba(40, 86, 215, 0.22);
+  box-shadow: 0 7px 18px rgba(107, 75, 31, 0.22);
   transition: background 0.16s, border-color 0.16s, transform 0.16s;
 }
 
@@ -456,7 +533,7 @@ td {
   border-style: solid;
   border-color: var(--accent);
   background: var(--accent-soft);
-  box-shadow: inset 0 0 0 2px rgba(40, 86, 215, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(107, 75, 31, 0.12);
   transform: scale(0.995);
 }
 
@@ -821,7 +898,7 @@ td {
 .upload-card.drag-active {
   border-color: var(--accent);
   background: var(--accent-soft);
-  box-shadow: inset 0 0 0 2px rgba(40, 86, 215, 0.1);
+  box-shadow: inset 0 0 0 2px rgba(107, 75, 31, 0.1);
 }
 
 .upload-number {
@@ -1000,6 +1077,30 @@ footer {
 @media (max-width: 700px) {
   .page {
     padding: 28px 14px;
+  }
+
+  .ambient-compass {
+    width: 125px;
+    height: 125px;
+    left: -52px;
+  }
+
+  .ambient-brain {
+    width: 145px;
+    height: 145px;
+    right: -62px;
+  }
+
+  .ambient-career {
+    width: 112px;
+    height: 112px;
+    left: -25px;
+  }
+
+  .ambient-route {
+    width: 120px;
+    height: 120px;
+    right: -36px;
   }
 
   .tabs {
