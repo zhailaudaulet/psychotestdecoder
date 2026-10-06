@@ -9,102 +9,12 @@ import {
   AlertCircle,
   X,
 } from "lucide-react";
+import {
+  TEST_DEFINITIONS,
+  decodeTestUrl,
+  getLevel,
+} from "./decoder.js";
 import "./styles.css";
-
-/* =========================
-   DECODER LOGIC
-========================= */
-
-const ALPHABET =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-const MODULUS = 10 ** 10;
-const OFFSET = 3089424140;
-
-const ORDER_LOW_TO_HIGH = [
-  "Шкала искренности",
-  "Лабильность",
-  "Тревожность",
-  "Сензитивность",
-  "Интроверсия",
-  "Ригидность",
-  "Агрессивность",
-  "Спонтанность",
-  "Экстраверсия",
-  "Шкала аггравации",
-];
-
-const OUTPUT_ORDER = [
-  "Экстраверсия",
-  "Спонтанность",
-  "Агрессивность",
-  "Ригидность",
-  "Интроверсия",
-  "Сензитивность",
-  "Тревожность",
-  "Лабильность",
-  "Шкала искренности",
-  "Шкала аггравации",
-];
-
-function charValue(char) {
-  const value = ALPHABET.indexOf(char);
-
-  if (value === -1) {
-    throw new Error(`Недопустимый символ: ${char}`);
-  }
-
-  return value >= 52 ? value - 64 : value;
-}
-
-function decode(payload) {
-  let n = 0;
-
-  for (const char of payload) {
-    n = n * 64 + charValue(char);
-  }
-
-  n = (n + OFFSET) % MODULUS;
-
-  const digits = String(n)
-    .padStart(10, "0")
-    .split("")
-    .reverse()
-    .map(Number);
-
-  return Object.fromEntries(
-    ORDER_LOW_TO_HIGH.map((name, index) => [name, digits[index]])
-  );
-}
-
-function getLevel(score) {
-  if (score <= 1) return "гипоэмотивность";
-  if (score <= 4) return "норма";
-  if (score <= 7) return "акцентуация";
-  return "избыточность";
-}
-
-function decodeUrl(url) {
-  const match = String(url).match(/[?&]v=([A-Za-z0-9_-]+)/);
-
-  if (!match) {
-    throw new Error("Не найден параметр v");
-  }
-
-  const payload = match[1];
-
-  if (!payload.startsWith("ito") || payload.length !== 10) {
-    throw new Error("Неожиданный формат ссылки");
-  }
-
-  const code = payload.slice(3);
-
-  if (code[0] !== "A") {
-    throw new Error("Неподдерживаемая версия теста");
-  }
-
-  return decode(code.slice(1));
-}
 
 /* =========================
    EXCEL HELPERS
@@ -143,20 +53,20 @@ function normalizeName(value) {
    TEMPLATE
 ========================= */
 
-function downloadDecoderTemplate() {
+function downloadDecoderTemplate(testDefinition) {
   const data = [
     ["ФИО", "ссылка"],
     [
       "Иванов Иван Иванович",
-      "https://psytests.org/result?v=itoAItqccE",
+      testDefinition.exampleUrl,
     ],
     [
       "Петров Петр Петрович",
-      "https://psytests.org/result?v=itoAItqccE",
+      testDefinition.exampleUrl,
     ],
     [
       "Сидорова Анна Сергеевна",
-      "https://psytests.org/result?v=itoAItqccE",
+      testDefinition.exampleUrl,
     ],
   ];
 
@@ -177,7 +87,7 @@ function downloadDecoderTemplate() {
 
   XLSX.writeFile(
     workbook,
-    "decoder_template.xlsx"
+    `${testDefinition.label.toLowerCase()}_template.xlsx`
   );
 }
 
@@ -185,22 +95,22 @@ function downloadDecoderTemplate() {
    DECODER EXPORT
 ========================= */
 
-function downloadDecoderResults(results, errors) {
+function downloadDecoderResults(testDefinition, results, errors) {
   const headers = [
     "ФИО",
-    ...OUTPUT_ORDER.flatMap((name) => [
-      name,
-      "уровень",
-    ]),
+    ...testDefinition.metrics.flatMap((name) =>
+      testDefinition.includeLevels ? [name, "уровень"] : [name]
+    ),
   ];
 
   const rows = results.map((result) => {
     return [
       result["ФИО"],
-      ...OUTPUT_ORDER.flatMap((name) => [
-        result[name],
-        result[`level_${name}`],
-      ]),
+      ...testDefinition.metrics.flatMap((name) =>
+        testDefinition.includeLevels
+          ? [result[name], result[`level_${name}`]]
+          : [result[name]]
+      ),
     ];
   });
 
@@ -211,7 +121,7 @@ function downloadDecoderResults(results, errors) {
 
   worksheet["!cols"] = [
     { wch: 32 },
-    ...Array(20).fill({ wch: 19 }),
+    ...headers.slice(1).map(() => ({ wch: 22 })),
   ];
 
   const workbook = XLSX.utils.book_new();
@@ -250,7 +160,7 @@ function downloadDecoderResults(results, errors) {
 
   XLSX.writeFile(
     workbook,
-    "psytest_results.xlsx"
+    testDefinition.fileName
   );
 }
 
@@ -287,6 +197,15 @@ function downloadMergedResults(rows) {
   );
 }
 
+function createDecoderStates() {
+  return Object.fromEntries(
+    Object.keys(TEST_DEFINITIONS).map((testId) => [
+      testId,
+      { file: null, results: [], errors: [], loading: false },
+    ])
+  );
+}
+
 /* =========================
    APP
 ========================= */
@@ -296,17 +215,10 @@ function App() {
 
   /* Decoder */
 
-  const [decoderFile, setDecoderFile] =
-    useState(null);
-
-  const [decoderResults, setDecoderResults] =
-    useState([]);
-
-  const [decoderErrors, setDecoderErrors] =
-    useState([]);
-
-  const [decoderLoading, setDecoderLoading] =
-    useState(false);
+  const [activeTestId, setActiveTestId] = useState("ito");
+  const [decoderStates, setDecoderStates] = useState(createDecoderStates);
+  const activeTest = TEST_DEFINITIONS[activeTestId];
+  const decoderState = decoderStates[activeTestId];
 
   /* Merger */
 
@@ -329,7 +241,17 @@ function App() {
      DECODER
   ========================= */
 
-  async function processDecoder(file) {
+  function updateDecoderState(testId, changes) {
+    setDecoderStates((current) => ({
+      ...current,
+      [testId]: {
+        ...current[testId],
+        ...changes,
+      },
+    }));
+  }
+
+  async function processDecoder(file, testId = activeTestId) {
     if (!file) return;
 
     if (!/\.(xlsx|xls)$/i.test(file.name)) {
@@ -339,10 +261,14 @@ function App() {
       return;
     }
 
-    setDecoderFile(file);
-    setDecoderLoading(true);
-    setDecoderResults([]);
-    setDecoderErrors([]);
+    const testDefinition = TEST_DEFINITIONS[testId];
+
+    updateDecoderState(testId, {
+      file,
+      loading: true,
+      results: [],
+      errors: [],
+    });
 
     try {
       const data = await readExcel(file);
@@ -380,18 +306,20 @@ function App() {
         if (!name && !url) continue;
 
         try {
-          const decoded = decodeUrl(url);
+          const decoded = decodeTestUrl(url, testId);
 
           const result = {
             ФИО: name,
           };
 
-          for (const metric of OUTPUT_ORDER) {
+          for (const metric of testDefinition.metrics) {
             result[metric] =
               decoded[metric];
 
-            result[`level_${metric}`] =
-              getLevel(decoded[metric]);
+            if (testDefinition.includeLevels) {
+              result[`level_${metric}`] =
+                getLevel(decoded[metric]);
+            }
           }
 
           results.push(result);
@@ -404,14 +332,22 @@ function App() {
         }
       }
 
-      setDecoderResults(results);
-      setDecoderErrors(errors);
+      updateDecoderState(testId, { results, errors });
     } catch (error) {
       alert(error.message);
-      setDecoderFile(null);
+      updateDecoderState(testId, { file: null });
     } finally {
-      setDecoderLoading(false);
+      updateDecoderState(testId, { loading: false });
     }
+  }
+
+  function resetDecoder(testId = activeTestId) {
+    updateDecoderState(testId, {
+      file: null,
+      results: [],
+      errors: [],
+      loading: false,
+    });
   }
 
   /* =========================
@@ -616,26 +552,40 @@ function App() {
         {tab === "decoder" && (
           <main>
 
+            <nav className="test-tabs" aria-label="Выбор психологического теста">
+              {Object.entries(TEST_DEFINITIONS).map(([testId, definition]) => (
+                <button
+                  key={testId}
+                  type="button"
+                  className={activeTestId === testId ? "active" : ""}
+                  aria-current={activeTestId === testId ? "page" : undefined}
+                  onClick={() => setActiveTestId(testId)}
+                >
+                  <span>{definition.label}</span>
+                  <small>{definition.metrics.length} шкал</small>
+                </button>
+              ))}
+            </nav>
+
             <div className="page-title">
 
               <div>
                 <h2>
-                  Decoder
+                  {activeTest.title}
                 </h2>
 
                 <p>
-                  Расшифровка ссылок из Excel
+                  {activeTest.description}
                 </p>
               </div>
 
               <button
+                type="button"
                 className="outline-btn"
-                onClick={
-                  downloadDecoderTemplate
-                }
+                onClick={() => downloadDecoderTemplate(activeTest)}
               >
                 <Download size={17} />
-                Скачать шаблон
+                Шаблон {activeTest.label}
               </button>
 
             </div>
@@ -647,7 +597,7 @@ function App() {
               <div className="demo-header">
                 <div>
                   <strong>
-                    Шаблон входного файла
+                    Шаблон для теста «{activeTest.label}»
                   </strong>
 
                   <span>
@@ -661,54 +611,37 @@ function App() {
                 />
               </div>
 
-              <table>
-                <thead>
-                  <tr>
-                    <th>ФИО</th>
-                    <th>ссылка</th>
-                  </tr>
-                </thead>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ФИО</th>
+                      <th>ссылка</th>
+                    </tr>
+                  </thead>
 
-                <tbody>
-
-                  <tr>
-                    <td>
-                      Иванов Иван Иванович
-                    </td>
-
-                    <td>
-                      https://psytests.org/result?v=itoAItqccE
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      Петров Петр Петрович
-                    </td>
-
-                    <td>
-                      https://psytests.org/result?v=itoAItqccE
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      Сидорова Анна Сергеевна
-                    </td>
-
-                    <td>
-                      https://psytests.org/result?v=itoAItqccE
-                    </td>
-                  </tr>
-
-                </tbody>
-              </table>
+                  <tbody>
+                    <tr>
+                      <td>Иванов Иван Иванович</td>
+                      <td>{activeTest.exampleUrl}</td>
+                    </tr>
+                    <tr>
+                      <td>Петров Петр Петрович</td>
+                      <td>{activeTest.exampleUrl}</td>
+                    </tr>
+                    <tr>
+                      <td>Сидорова Анна Сергеевна</td>
+                      <td>{activeTest.exampleUrl}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
             </section>
 
             {/* UPLOAD */}
 
-            {!decoderFile && (
+            {!decoderState.file && (
               <label className="dropzone">
 
                 <input
@@ -717,7 +650,8 @@ function App() {
                   accept=".xlsx,.xls"
                   onChange={(e) =>
                     processDecoder(
-                      e.target.files[0]
+                      e.target.files[0],
+                      activeTestId
                     )
                   }
                 />
@@ -727,7 +661,7 @@ function App() {
                 </div>
 
                 <h2>
-                  Загрузите Excel-файл
+                  Загрузите файл «{activeTest.label}»
                 </h2>
 
                 <p>
@@ -743,7 +677,7 @@ function App() {
 
             {/* FILE */}
 
-            {decoderFile && (
+            {decoderState.file && (
               <>
                 <div className="file-card">
 
@@ -757,45 +691,43 @@ function App() {
 
                     <div>
                       <strong>
-                        {decoderFile.name}
+                        {decoderState.file.name}
                       </strong>
 
                       <span>
-                        Входной файл
+                        Входной файл · {activeTest.label}
                       </span>
                     </div>
 
                   </div>
 
                   <button
+                    type="button"
                     className="icon-btn"
-                    onClick={() => {
-                      setDecoderFile(null);
-                      setDecoderResults([]);
-                      setDecoderErrors([]);
-                    }}
+                    aria-label={`Удалить файл ${activeTest.label}`}
+                    onClick={() => resetDecoder(activeTestId)}
                   >
                     <X size={18} />
                   </button>
 
                 </div>
 
-                {decoderLoading && (
-                  <div className="processing">
+                {decoderState.loading && (
+                  <div className="processing" role="status">
                     Расшифровываем ссылки…
                   </div>
                 )}
 
-                {!decoderLoading &&
-                  (decoderResults.length > 0 ||
-                    decoderErrors.length > 0) && (
+                {!decoderState.loading &&
+                  (decoderState.results.length > 0 ||
+                    decoderState.errors.length > 0) && (
                     <>
 
                       <div className="stats">
 
                         <div>
                           <b>
-                            {decoderResults.length}
+                            {decoderState.results.length}
                           </b>
 
                           <span>
@@ -805,7 +737,7 @@ function App() {
 
                         <div>
                           <b>
-                            {decoderErrors.length}
+                            {decoderState.errors.length}
                           </b>
 
                           <span>
@@ -815,8 +747,8 @@ function App() {
 
                         <div>
                           <b>
-                            {decoderResults.length +
-                              decoderErrors.length}
+                            {decoderState.results.length +
+                              decoderState.errors.length}
                           </b>
 
                           <span>
@@ -826,7 +758,7 @@ function App() {
 
                       </div>
 
-                      {decoderErrors.length >
+                      {decoderState.errors.length >
                         0 && (
                         <div className="warning">
 
@@ -851,19 +783,21 @@ function App() {
                       )}
 
                       <button
+                        type="button"
                         className="download-btn"
                         disabled={
-                          !decoderResults.length
+                          !decoderState.results.length
                         }
                         onClick={() =>
                           downloadDecoderResults(
-                            decoderResults,
-                            decoderErrors
+                            activeTest,
+                            decoderState.results,
+                            decoderState.errors
                           )
                         }
                       >
                         <Download size={19} />
-                        Скачать результаты Excel
+                        Скачать результаты {activeTest.label}
                       </button>
 
                     </>

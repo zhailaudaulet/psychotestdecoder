@@ -123,6 +123,63 @@ input {
     0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
+button:focus-visible,
+label:has(input:focus-visible) {
+  outline: 3px solid rgba(23, 23, 23, 0.28);
+  outline-offset: 3px;
+}
+
+/* =========================
+   TEST NAVIGATION
+========================= */
+
+.test-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.test-tabs button {
+  min-height: 70px;
+  padding: 12px 14px;
+  border: 1px solid #deded9;
+  border-radius: 13px;
+  background: transparent;
+  color: #656565;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s, background 0.16s, color 0.16s;
+}
+
+.test-tabs button:hover {
+  border-color: #9f9f99;
+  color: #171717;
+}
+
+.test-tabs button.active {
+  border-color: #171717;
+  background: #171717;
+  color: white;
+}
+
+.test-tabs span,
+.test-tabs small {
+  display: block;
+}
+
+.test-tabs span {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.test-tabs small {
+  margin-top: 6px;
+  color: inherit;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
 /* =========================
    TITLE
 ========================= */
@@ -226,6 +283,10 @@ table {
   border-collapse: collapse;
 
   font-size: 12px;
+}
+
+.table-wrap {
+  overflow-x: auto;
 }
 
 th,
@@ -730,6 +791,10 @@ footer {
 
   .tabs button {
     flex: 1;
+  }
+
+  .test-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .page-title {
