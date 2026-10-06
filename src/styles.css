@@ -13,18 +13,18 @@
     sans-serif;
 
   color: #191919;
-  background: #f4f1e9;
+  background: #f6f6f4;
 
-  --accent: #8b642d;
-  --accent-dark: #6b4b1f;
-  --accent-soft: #f3ebdc;
-  --accent-line: #d5c4a5;
+  --accent: #171717;
+  --accent-dark: #171717;
+  --accent-soft: #ededeb;
+  --accent-line: #c9c9c4;
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background: #f4f1e9;
+  background: #f6f6f4;
 }
 
 button,
@@ -62,9 +62,9 @@ input {
 .ambient-glow {
   position: absolute;
   border-radius: 50%;
-  background: #d9c39b;
+  background: #171717;
   filter: blur(90px);
-  opacity: 0.24;
+  opacity: 0.07;
 }
 
 .ambient-glow-top {
@@ -79,14 +79,14 @@ input {
   height: 470px;
   left: -230px;
   bottom: -230px;
-  background: #c8c1ad;
-  opacity: 0.2;
+  background: #171717;
+  opacity: 0.05;
 }
 
 .ambient-symbol {
   position: absolute;
-  color: #725b35;
-  opacity: 0.1;
+  color: #171717;
+  opacity: 0.09;
   filter: blur(1.6px);
 }
 
@@ -228,7 +228,7 @@ input {
   color: var(--accent);
   background: white;
   border: 1px solid var(--accent-line);
-  box-shadow: 0 8px 24px rgba(107, 75, 31, 0.13);
+  box-shadow: 0 8px 24px rgba(23, 23, 23, 0.13);
 }
 
 .orientation-ring-primary {
@@ -409,7 +409,7 @@ label:has(input:focus-visible) {
   border-color: var(--accent);
   background: var(--accent);
   color: white;
-  box-shadow: 0 7px 18px rgba(107, 75, 31, 0.22);
+  box-shadow: 0 7px 18px rgba(23, 23, 23, 0.22);
   transition: background 0.16s, border-color 0.16s, transform 0.16s;
 }
 
@@ -533,7 +533,7 @@ td {
   border-style: solid;
   border-color: var(--accent);
   background: var(--accent-soft);
-  box-shadow: inset 0 0 0 2px rgba(107, 75, 31, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(23, 23, 23, 0.12);
   transform: scale(0.995);
 }
 
@@ -898,7 +898,7 @@ td {
 .upload-card.drag-active {
   border-color: var(--accent);
   background: var(--accent-soft);
-  box-shadow: inset 0 0 0 2px rgba(107, 75, 31, 0.1);
+  box-shadow: inset 0 0 0 2px rgba(23, 23, 23, 0.1);
 }
 
 .upload-number {
