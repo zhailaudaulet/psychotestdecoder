@@ -8,6 +8,8 @@ import {
   Merge,
   AlertCircle,
   X,
+  BrainCircuit,
+  Compass,
 } from "lucide-react";
 import {
   TEST_DEFINITIONS,
@@ -217,6 +219,7 @@ function App() {
 
   const [activeTestId, setActiveTestId] = useState("ito");
   const [decoderStates, setDecoderStates] = useState(createDecoderStates);
+  const [decoderDragActive, setDecoderDragActive] = useState(false);
   const activeTest = TEST_DEFINITIONS[activeTestId];
   const decoderState = decoderStates[activeTestId];
 
@@ -348,6 +351,29 @@ function App() {
       errors: [],
       loading: false,
     });
+  }
+
+  function handleDecoderDrag(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "copy";
+    setDecoderDragActive(true);
+  }
+
+  function handleDecoderDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+
+    setDecoderDragActive(false);
+  }
+
+  function handleDecoderDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    setDecoderDragActive(false);
+    processDecoder(event.dataTransfer.files?.[0], activeTestId);
   }
 
   /* =========================
@@ -498,18 +524,32 @@ function App() {
         {/* HEADER */}
 
         <header className="header">
-          <div className="brand-mark">
-            <FileSpreadsheet size={22} />
+          <div className="header-identity">
+            <div className="brand-mark">
+              <FileSpreadsheet size={22} />
+            </div>
+
+            <div>
+              <h1>
+                PsychTest Tools
+              </h1>
+
+              <p>
+                Расшифровка и объединение результатов
+              </p>
+            </div>
           </div>
 
-          <div>
-            <h1>
-              PsychTest Tools
-            </h1>
+          <div className="orientation-visual" aria-hidden="true">
+            <div className="orientation-orbit" />
 
-            <p>
-              Расшифровка и объединение результатов
-            </p>
+            <div className="orientation-ring orientation-ring-primary">
+              <Compass size={28} />
+            </div>
+
+            <div className="orientation-ring orientation-ring-secondary">
+              <BrainCircuit size={23} />
+            </div>
           </div>
         </header>
 
@@ -581,7 +621,7 @@ function App() {
 
               <button
                 type="button"
-                className="outline-btn"
+                className="outline-btn template-btn"
                 onClick={() => downloadDecoderTemplate(activeTest)}
               >
                 <Download size={17} />
@@ -642,18 +682,25 @@ function App() {
             {/* UPLOAD */}
 
             {!decoderState.file && (
-              <label className="dropzone">
+              <label
+                className={`dropzone ${decoderDragActive ? "drag-active" : ""}`}
+                onDragEnter={handleDecoderDrag}
+                onDragOver={handleDecoderDrag}
+                onDragLeave={handleDecoderDragLeave}
+                onDrop={handleDecoderDrop}
+              >
 
                 <input
                   hidden
                   type="file"
                   accept=".xlsx,.xls"
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    setDecoderDragActive(false);
                     processDecoder(
                       e.target.files[0],
                       activeTestId
-                    )
-                  }
+                    );
+                  }}
                 />
 
                 <div className="upload-icon">
@@ -780,6 +827,13 @@ function App() {
                           </div>
 
                         </div>
+                      )}
+
+                      {decoderState.results.length > 0 && (
+                        <ResultsPreview
+                          testDefinition={activeTest}
+                          results={decoderState.results}
+                        />
                       )}
 
                       <button
@@ -1079,6 +1133,66 @@ function App() {
 }
 
 /* =========================
+   RESULTS PREVIEW
+========================= */
+
+function ResultsPreview({ testDefinition, results }) {
+  const previewRows = results.slice(0, 5);
+
+  return (
+    <section className="results-preview">
+      <div className="preview-header">
+        <div>
+          <h3>Предпросмотр результатов</h3>
+          <p>
+            Показано {previewRows.length} из {results.length} строк
+          </p>
+        </div>
+
+        <FileSpreadsheet size={20} />
+      </div>
+
+      <div className="table-wrap results-table-wrap">
+        <table className="results-table">
+          <thead>
+            <tr>
+              <th>ФИО</th>
+              {testDefinition.metrics.map((metric) => (
+                <th key={metric}>{metric}</th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {previewRows.map((result, index) => (
+              <tr key={`${result["ФИО"]}-${index}`}>
+                <td className="result-name">
+                  {result["ФИО"] || "Без имени"}
+                </td>
+
+                {testDefinition.metrics.map((metric) => (
+                  <td key={metric}>
+                    <strong className="result-score">
+                      {result[metric]}
+                    </strong>
+
+                    {testDefinition.includeLevels && (
+                      <span className="result-level">
+                        {result[`level_${metric}`]}
+                      </span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+/* =========================
    UPLOAD CARD
 ========================= */
 
@@ -1090,8 +1204,50 @@ function UploadCard({
   setFile,
   id,
 }) {
+  const [isDragging, setIsDragging] = useState(false);
+
+  function selectFile(selectedFile) {
+    if (!selectedFile) return;
+
+    if (!/\.(xlsx|xls)$/i.test(selectedFile.name)) {
+      alert("Загрузите Excel-файл .xlsx или .xls");
+      return;
+    }
+
+    setFile(selectedFile);
+  }
+
+  function handleDrag(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "copy";
+    setIsDragging(true);
+  }
+
+  function handleDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+
+    setIsDragging(false);
+  }
+
+  function handleDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+    selectFile(event.dataTransfer.files?.[0]);
+  }
+
   return (
-    <section className="upload-card">
+    <section
+      className={`upload-card ${isDragging ? "drag-active" : ""}`}
+      onDragEnter={handleDrag}
+      onDragOver={handleDrag}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
 
       <div className="upload-number">
         {number}
@@ -1117,6 +1273,8 @@ function UploadCard({
             </span>
 
             <button
+              type="button"
+              aria-label={`Удалить файл ${file.name}`}
               onClick={() =>
                 setFile(null)
               }
@@ -1133,16 +1291,12 @@ function UploadCard({
               type="file"
               accept=".xlsx,.xls"
               id={id}
-              onChange={(e) =>
-                setFile(
-                  e.target.files[0]
-                )
-              }
+              onChange={(e) => selectFile(e.target.files[0])}
             />
 
             <Upload size={17} />
 
-            Выбрать Excel
+            Выбрать или перетащить Excel
 
           </label>
         )}
